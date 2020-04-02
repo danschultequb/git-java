@@ -11,7 +11,7 @@ public interface GitCloneProcessBuilderTests
                 runner.test("with null ProcessBuilder", (Test test) ->
                 {
                     test.assertThrows(() -> GitCloneProcessBuilder.create(null, "foo"),
-                        new PreConditionFailure("processBuilder cannot be null."));
+                        new PreConditionFailure("gitProcessBuilder cannot be null."));
                 });
 
                 final Action2<String,Throwable> createErrorTest = (String repository, Throwable expected) ->
@@ -68,6 +68,9 @@ public interface GitCloneProcessBuilderTests
                             "fatal: repository 'foo' does not exist"),
                         Strings.getLines(stderr.asCharacterReadStream().getText().await()));
                     test.assertEqual(
+                        Path.parse("git"),
+                        cloneProcessBuilder.getExecutablePath());
+                    test.assertEqual(
                         Iterable.create(
                             "clone",
                             "\"foo\""),
@@ -94,9 +97,11 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into 'git-java'...",
-                                "warning: You appear to have cloned an empty repository."),
+                                "Cloning into 'git-java'..."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                    test.assertEqual(
+                        Path.parse("git"),
+                        cloneProcessBuilder.getExecutablePath());
                     test.assertEqual(
                         Iterable.create(
                             "clone",
@@ -136,6 +141,9 @@ public interface GitCloneProcessBuilderTests
                                 "done."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
                         test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
+                        test.assertEqual(
                             Iterable.create(
                                 "clone",
                                 "\"../csv-java\""),
@@ -171,12 +179,61 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into 'relative-path-repo'...",
-                                "warning: You appear to have cloned an empty repository."),
+                                "Cloning into 'relative-path-repo'..."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
                         test.assertEqual(
                             Iterable.create(
                                 "clone",
+                                "\"https://github.com/danschultequb/git-java\"",
+                                "\"relative-path-repo\""),
+                            cloneProcessBuilder.getArguments());
+                    }
+                    finally
+                    {
+                        test.getProcess()
+                            .getCurrentFolder().await()
+                            .getFolder("relative-path-repo").await()
+                            .delete().catchError(FolderNotFoundException.class).await();
+                    }
+                });
+
+                runner.test("with URL repository and relative path directory when parent folder exists with progress", (Test test) ->
+                {
+                    final Git git = Git.create(test.getProcess());
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
+                        .setDirectory("relative-path-repo")
+                        .setProgress(true);
+
+                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    cloneProcessBuilder.redirectOutput(stdout);
+
+                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    cloneProcessBuilder.redirectError(stderr);
+
+                    try
+                    {
+                        final Integer result = cloneProcessBuilder.run().await();
+                        test.assertEqual(0, result);
+                        test.assertEqual(
+                            Iterable.create(),
+                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                        final String stderrText = stderr.asCharacterReadStream().getText().await();
+                        test.assertContains(stderrText, "Cloning into 'relative-path-repo'...");
+                        test.assertContains(stderrText, "remote: Enumerating objects: 15, done.        ");
+                        test.assertContains(stderrText, "remote: Counting objects:   6% (1/15)        ");
+                        test.assertContains(stderrText, "remote: Compressing objects:   7% (1/13)        ");
+                        test.assertContains(stderrText, "remote: Total 15 (delta 0), reused 15 (delta 0), pack-reused 0        ");
+                        test.assertContains(stderrText, "Receiving objects:   6% (1/15)");
+                        test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
+                        test.assertEqual(
+                            Iterable.create(
+                                "clone",
+                                "--progress",
                                 "\"https://github.com/danschultequb/git-java\"",
                                 "\"relative-path-repo\""),
                             cloneProcessBuilder.getArguments());
@@ -211,9 +268,11 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into 'relative/path/repo'...",
-                                "warning: You appear to have cloned an empty repository."),
+                                "Cloning into 'relative/path/repo'..."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
                         test.assertEqual(
                             Iterable.create(
                                 "clone",
@@ -253,9 +312,11 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into '" + rootedPathRepoFolder + "'...",
-                                "warning: You appear to have cloned an empty repository."),
+                                "Cloning into '" + rootedPathRepoFolder + "'..."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
                         test.assertEqual(
                             Iterable.create(
                                 "clone",
@@ -265,7 +326,9 @@ public interface GitCloneProcessBuilderTests
                     }
                     finally
                     {
-                        rootedPathRepoFolder.delete().catchError(FolderNotFoundException.class).await();
+                        rootedPathRepoFolder.delete()
+                            .catchError(FolderNotFoundException.class)
+                            .await();
                     }
                 });
 
@@ -293,9 +356,11 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into '" + rootedPathRepoFolder + "'...",
-                                "warning: You appear to have cloned an empty repository."),
+                                "Cloning into '" + rootedPathRepoFolder + "'..."),
                             Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        test.assertEqual(
+                            Path.parse("git"),
+                            cloneProcessBuilder.getExecutablePath());
                         test.assertEqual(
                             Iterable.create(
                                 "clone",
@@ -305,9 +370,31 @@ public interface GitCloneProcessBuilderTests
                     }
                     finally
                     {
-                        rootedFolder.delete().catchError(FolderNotFoundException.class).await();
+                        rootedFolder.delete()
+                            .catchError(FolderNotFoundException.class)
+                            .await();
                     }
                 });
+            });
+
+            runner.testGroup("setProgress(Boolean)", () ->
+            {
+                final Action1<Boolean> setProgressTest = (Boolean progress) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(progress), (Test test) ->
+                    {
+                        final Git git = Git.create(test.getProcess());
+                        final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                        final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
+                        final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setProgress(progress);
+                        test.assertSame(cloneProcessBuilder, setDirectoryResult);
+                        test.assertEqual(progress, cloneProcessBuilder.getProgress());
+                    });
+                };
+
+                setProgressTest.run(null);
+                setProgressTest.run(false);
+                setProgressTest.run(true);
             });
 
             runner.testGroup("setDirectory(String)", () ->

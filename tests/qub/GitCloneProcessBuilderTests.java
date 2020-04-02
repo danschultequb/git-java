@@ -222,11 +222,10 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.asCharacterReadStream().getText().await()));
                         final String stderrText = stderr.asCharacterReadStream().getText().await();
                         test.assertContains(stderrText, "Cloning into 'relative-path-repo'...");
-                        test.assertContains(stderrText, "remote: Enumerating objects: 15, done.        ");
-                        test.assertContains(stderrText, "remote: Counting objects:   6% (1/15)        ");
-                        test.assertContains(stderrText, "remote: Compressing objects:   7% (1/13)        ");
-                        test.assertContains(stderrText, "remote: Total 15 (delta 0), reused 15 (delta 0), pack-reused 0        ");
-                        test.assertContains(stderrText, "Receiving objects:   6% (1/15)");
+                        test.assertContains(stderrText, "remote: Enumerating objects:");
+                        test.assertContains(stderrText, "remote: Counting objects:");
+                        test.assertContains(stderrText, "remote: Compressing objects:");
+                        test.assertContains(stderrText, "Receiving objects:");
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());

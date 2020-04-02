@@ -44,12 +44,23 @@ public interface GitTests
                         test.assertNotNull(cloneProcessBuilder);
                         test.assertEqual(repository, cloneProcessBuilder.getRepository());
                         test.assertNull(cloneProcessBuilder.getDirectory());
+                        test.assertEqual(Path.parse("git"), cloneProcessBuilder.getExecutablePath());
+                        test.assertEqual(Iterable.create("clone"), cloneProcessBuilder.getArguments());
                     });
                 };
 
                 getCloneProcessBuilderTest.run("foo");
                 getCloneProcessBuilderTest.run("https://github.com/danschultequb/git-java");
                 getCloneProcessBuilderTest.run("https://github.com/danschultequb/git-java.git");
+            });
+
+            runner.test("getPullProcessBuilder()", (Test test) ->
+            {
+                final Git git = Git.create(test.getProcess());
+                final GitPullProcessBuilder pullProcessBuilder = git.getPullProcessBuilder().await();
+                test.assertNotNull(pullProcessBuilder);
+                test.assertEqual(Path.parse("git"), pullProcessBuilder.getExecutablePath());
+                test.assertEqual(Iterable.create("pull"), pullProcessBuilder.getArguments());
             });
         });
     }

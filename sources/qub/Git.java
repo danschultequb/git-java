@@ -50,4 +50,16 @@ public class Git
             return GitCloneProcessBuilder.create(this.getGitProcessBuilder().await(), repository);
         });
     }
+
+    /**
+     * Get a GitPullProcessBuilder that can be used to invoke the "git pull" operation.
+     * @return The GitPullProcessBuilder that can be used to invoke the "git clone" operation.
+     */
+    public Result<GitPullProcessBuilder> getPullProcessBuilder()
+    {
+        return Result.create(() ->
+        {
+            return GitPullProcessBuilder.create(this.getGitProcessBuilder().await());
+        });
+    }
 }

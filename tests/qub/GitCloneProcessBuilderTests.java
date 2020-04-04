@@ -417,6 +417,51 @@ public interface GitCloneProcessBuilderTests
                 setDirectoryTest.run("/hello");
                 setDirectoryTest.run("/hello/");
             });
+
+            runner.testGroup("setDirectory(Path)", () ->
+            {
+                final Action1<Path> setDirectoryTest = (Path directory) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(directory), (Test test) ->
+                    {
+                        final Git git = Git.create(test.getProcess());
+                        final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                        final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
+                        final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory(directory);
+                        test.assertSame(cloneProcessBuilder, setDirectoryResult);
+                        test.assertEqual(directory, cloneProcessBuilder.getDirectory());
+                    });
+                };
+
+                setDirectoryTest.run(null);
+                setDirectoryTest.run(Path.parse("hello"));
+                setDirectoryTest.run(Path.parse("/hello"));
+                setDirectoryTest.run(Path.parse("/hello/"));
+            });
+
+            runner.testGroup("setDirectory(Folder)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final Git git = Git.create(test.getProcess());
+                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                    final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
+                    final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory((Folder)null);
+                    test.assertSame(cloneProcessBuilder, setDirectoryResult);
+                    test.assertEqual(null, cloneProcessBuilder.getDirectory());
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    final Folder currentFolder = test.getProcess().getCurrentFolder().await();
+                    final Git git = Git.create(test.getProcess());
+                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                    final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
+                    final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory(currentFolder);
+                    test.assertSame(cloneProcessBuilder, setDirectoryResult);
+                    test.assertEqual(currentFolder.toString(), cloneProcessBuilder.getDirectory());
+                });
+            });
         });
     }
 }

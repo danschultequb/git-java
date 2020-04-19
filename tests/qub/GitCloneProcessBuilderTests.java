@@ -52,21 +52,21 @@ public interface GitCloneProcessBuilderTests
                     final Git git = Git.create(test.getProcess());
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("foo").await();
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     final Integer result = cloneProcessBuilder.run().await();
                     test.assertEqual(128, result);
                     test.assertEqual(
                         Iterable.create(),
-                        Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                        Strings.getLines(stdout.getText().await()));
                     test.assertEqual(
                         Iterable.create(
                             "fatal: repository 'foo' does not exist"),
-                        Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        Strings.getLines(stderr.getText().await()));
                     test.assertEqual(
                         Path.parse("git"),
                         cloneProcessBuilder.getExecutablePath());
@@ -82,10 +82,10 @@ public interface GitCloneProcessBuilderTests
                     final Git git = Git.create(test.getProcess());
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await();
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -94,11 +94,11 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into 'git-java'..."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                     test.assertEqual(
                         Path.parse("git"),
                         cloneProcessBuilder.getExecutablePath());
@@ -122,10 +122,10 @@ public interface GitCloneProcessBuilderTests
                     final Git git = Git.create(test.getProcess());
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("../csv-java").await();
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -134,12 +134,12 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into 'csv-java'...",
                                 "done."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());
@@ -164,10 +164,10 @@ public interface GitCloneProcessBuilderTests
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
                         .setDirectory("relative-path-repo");
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -176,11 +176,11 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into 'relative-path-repo'..."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());
@@ -207,10 +207,10 @@ public interface GitCloneProcessBuilderTests
                         .setDirectory("relative-path-repo")
                         .setProgress(true);
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -219,8 +219,8 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
-                        final String stderrText = stderr.asCharacterReadStream().getText().await();
+                            Strings.getLines(stdout.getText().await()));
+                        final String stderrText = stderr.getText().await();
                         test.assertContains(stderrText, "Cloning into 'relative-path-repo'...");
                         test.assertContains(stderrText, "remote: Enumerating objects:");
                         test.assertContains(stderrText, "remote: Counting objects:");
@@ -252,10 +252,10 @@ public interface GitCloneProcessBuilderTests
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
                         .setDirectory("relative/path/repo");
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -264,11 +264,11 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into 'relative/path/repo'..."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());
@@ -296,10 +296,10 @@ public interface GitCloneProcessBuilderTests
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
                         .setDirectory(rootedPathRepoFolder.toString());
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -308,11 +308,11 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into '" + rootedPathRepoFolder + "'..."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());
@@ -340,10 +340,10 @@ public interface GitCloneProcessBuilderTests
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
                         .setDirectory(rootedPathRepoFolder.toString());
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectError(stderr);
 
                     try
@@ -352,11 +352,11 @@ public interface GitCloneProcessBuilderTests
                         test.assertEqual(0, result);
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
                                 "Cloning into '" + rootedPathRepoFolder + "'..."),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());

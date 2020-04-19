@@ -41,21 +41,21 @@ public interface GitPullProcessBuilderTests
                     final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
                         .setWorkingFolder(currentFolder.getParentFolder().await());
 
-                    final InMemoryByteStream stdout = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     pullProcessBuilder.redirectOutput(stdout);
 
-                    final InMemoryByteStream stderr = new InMemoryByteStream();
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                     pullProcessBuilder.redirectError(stderr);
 
                     test.assertEqual(128, pullProcessBuilder.run().await());
                     test.assertEqual(
                         Iterable.create(),
-                        Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                        Strings.getLines(stdout.getText().await()));
                     test.assertEqual(
                         Iterable.create(
                             "fatal: not a git repository (or any of the parent directories): .git"
                         ),
-                        Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                        Strings.getLines(stderr.getText().await()));
                 });
 
                 runner.test("in a repository that was just cloned", (Test test) ->
@@ -75,20 +75,20 @@ public interface GitPullProcessBuilderTests
                         final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
                             .setWorkingFolder(testRepoFolder);
 
-                        final InMemoryByteStream stdout = new InMemoryByteStream();
+                        final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                         pullProcessBuilder.redirectOutput(stdout);
 
-                        final InMemoryByteStream stderr = new InMemoryByteStream();
+                        final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
                         pullProcessBuilder.redirectError(stderr);
 
                         test.assertEqual(0, pullProcessBuilder.run().await());
                         test.assertEqual(
                             Iterable.create(
                                 "Already up to date."),
-                            Strings.getLines(stdout.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(),
-                            Strings.getLines(stderr.asCharacterReadStream().getText().await()));
+                            Strings.getLines(stderr.getText().await()));
                     }
                     finally
                     {

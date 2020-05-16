@@ -311,7 +311,7 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into '" + rootedPathRepoFolder + "'..."),
+                                "Cloning into '" + rootedPathRepoFolder.toString().substring(0, rootedPathRepoFolder.toString().length() - 1) + "'..."),
                             Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),
@@ -355,7 +355,7 @@ public interface GitCloneProcessBuilderTests
                             Strings.getLines(stdout.getText().await()));
                         test.assertEqual(
                             Iterable.create(
-                                "Cloning into '" + rootedPathRepoFolder + "'..."),
+                                "Cloning into '" + rootedPathRepoFolder.toString().substring(0, rootedPathRepoFolder.toString().length() - 1) + "'..."),
                             Strings.getLines(stderr.getText().await()));
                         test.assertEqual(
                             Path.parse("git"),

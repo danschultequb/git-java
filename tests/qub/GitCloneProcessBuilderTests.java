@@ -111,7 +111,7 @@ public interface GitCloneProcessBuilderTests
                     finally
                     {
                         test.getProcess()
-                            .getCurrentFolder().await()
+                            .getCurrentFolder()
                             .getFolder("git-java").await()
                             .delete().catchError(FolderNotFoundException.class).await();
                     }
@@ -152,7 +152,7 @@ public interface GitCloneProcessBuilderTests
                     finally
                     {
                         test.getProcess()
-                            .getCurrentFolder().await()
+                            .getCurrentFolder()
                             .getFolder("csv-java").await()
                             .delete().catchError(FolderNotFoundException.class).await();
                     }
@@ -194,7 +194,7 @@ public interface GitCloneProcessBuilderTests
                     finally
                     {
                         test.getProcess()
-                            .getCurrentFolder().await()
+                            .getCurrentFolder()
                             .getFolder("relative-path-repo").await()
                             .delete().catchError(FolderNotFoundException.class).await();
                     }
@@ -240,7 +240,7 @@ public interface GitCloneProcessBuilderTests
                     finally
                     {
                         test.getProcess()
-                            .getCurrentFolder().await()
+                            .getCurrentFolder()
                             .getFolder("relative-path-repo").await()
                             .delete().catchError(FolderNotFoundException.class).await();
                     }
@@ -282,7 +282,7 @@ public interface GitCloneProcessBuilderTests
                     finally
                     {
                         test.getProcess()
-                            .getCurrentFolder().await()
+                            .getCurrentFolder()
                             .getFolder("relative").await()
                             .delete().catchError(FolderNotFoundException.class).await();
                     }
@@ -290,7 +290,7 @@ public interface GitCloneProcessBuilderTests
 
                 runner.test("with URL repository and rooted path directory when parent folder exists", (Test test) ->
                 {
-                    final Folder currentFolder = test.getProcess().getCurrentFolder().await();
+                    final Folder currentFolder = test.getProcess().getCurrentFolder();
                     final Folder rootedPathRepoFolder = currentFolder.getFolder("rooted-path-repo").await();
                     final Git git = Git.create(test.getProcess());
                     final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
@@ -333,7 +333,7 @@ public interface GitCloneProcessBuilderTests
 
                 runner.test("with URL repository and rooted path directory when parent folder doesn't exists", (Test test) ->
                 {
-                    final Folder currentFolder = test.getProcess().getCurrentFolder().await();
+                    final Folder currentFolder = test.getProcess().getCurrentFolder();
                     final Folder rootedFolder = currentFolder.getFolder("rooted").await();
                     final Folder rootedPathRepoFolder = rootedFolder.getFolder("path/repo").await();
                     final Git git = Git.create(test.getProcess());
@@ -453,7 +453,7 @@ public interface GitCloneProcessBuilderTests
 
                 runner.test("with non-null", (Test test) ->
                 {
-                    final Folder currentFolder = test.getProcess().getCurrentFolder().await();
+                    final Folder currentFolder = test.getProcess().getCurrentFolder();
                     final Git git = Git.create(test.getProcess());
                     final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
                     final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");

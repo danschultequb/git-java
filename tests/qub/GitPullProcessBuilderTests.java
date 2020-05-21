@@ -35,7 +35,7 @@ public interface GitPullProcessBuilderTests
                 runner.test("in folder that isn't a git repository", (Test test) ->
                 {
                     final Process process = test.getProcess();
-                    final Folder currentFolder = process.getCurrentFolder().await();
+                    final Folder currentFolder = process.getCurrentFolder();
                     final Git git = Git.create(process);
                     final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
                     final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
@@ -61,7 +61,7 @@ public interface GitPullProcessBuilderTests
                 runner.test("in a repository that was just cloned", (Test test) ->
                 {
                     final Process process = test.getProcess();
-                    final Folder currentFolder = process.getCurrentFolder().await();
+                    final Folder currentFolder = process.getCurrentFolder();
                     final Folder testRepoFolder = currentFolder.getFolder("test-repo").await();
                     final Git git = Git.create(process);
 

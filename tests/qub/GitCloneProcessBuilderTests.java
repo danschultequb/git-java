@@ -225,7 +225,6 @@ public interface GitCloneProcessBuilderTests
                         test.assertContains(stderrText, "remote: Enumerating objects:");
                         test.assertContains(stderrText, "remote: Counting objects:");
                         test.assertContains(stderrText, "remote: Compressing objects:");
-                        test.assertContains(stderrText, "Receiving objects:");
                         test.assertEqual(
                             Path.parse("git"),
                             cloneProcessBuilder.getExecutablePath());

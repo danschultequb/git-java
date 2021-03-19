@@ -4,7 +4,9 @@ public interface GitPullProcessBuilderTests
 {
     static void test(TestRunner runner)
     {
-        runner.testGroup(GitPullProcessBuilder.class, () ->
+        runner.testGroup(GitPullProcessBuilder.class,
+            (TestResources resources) -> Tuple.create(resources.getProcessFactory()),
+            (ProcessFactory processFactory) ->
         {
             runner.testGroup("create(ProcessBuilder)", () ->
             {
@@ -16,7 +18,7 @@ public interface GitPullProcessBuilderTests
 
                 runner.test("with non-null", (Test test) ->
                 {
-                    final Git git = Git.create(test.getProcess());
+                    final Git git = Git.create(processFactory);
                     final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
                     final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder);
                     test.assertNotNull(pullProcessBuilder);
@@ -32,14 +34,14 @@ public interface GitPullProcessBuilderTests
 
             runner.testGroup("run()", () ->
             {
-                runner.test("in folder that isn't a git repository", (Test test) ->
+                runner.test("in folder that isn't a git repository",
+                    (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
+                    (Test test, Folder temporaryFolder) ->
                 {
-                    final Process process = test.getProcess();
-                    final Folder currentFolder = process.getCurrentFolder();
-                    final Git git = Git.create(process);
+                    final Git git = Git.create(processFactory);
                     final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
                     final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
-                        .setWorkingFolder(currentFolder.getParentFolder().await());
+                        .setWorkingFolder(temporaryFolder);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     pullProcessBuilder.redirectOutput(stdout);
@@ -58,42 +60,35 @@ public interface GitPullProcessBuilderTests
                         Strings.getLines(stderr.getText().await()));
                 });
 
-                runner.test("in a repository that was just cloned", (Test test) ->
+                runner.test("in a repository that was just cloned",
+                    (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
+                    (Test test, Folder temporaryFolder) ->
                 {
-                    final Process process = test.getProcess();
-                    final Folder currentFolder = process.getCurrentFolder();
-                    final Folder testRepoFolder = currentFolder.getFolder("test-repo").await();
-                    final Git git = Git.create(process);
+                    final Git git = Git.create(processFactory);
 
-                    try
-                    {
-                        git.getCloneProcessBuilder("https://github.com/danschultequb/csv-java").await()
-                            .setDirectory(testRepoFolder)
-                            .run().await();
+                    git.getCloneProcessBuilder("https://github.com/danschultequb/csv-java").await()
+                        .setDirectory(temporaryFolder)
+                        .run()
+                        .await();
 
-                        final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                        final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
-                            .setWorkingFolder(testRepoFolder);
+                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                    final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
+                        .setWorkingFolder(temporaryFolder);
 
-                        final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
-                        pullProcessBuilder.redirectOutput(stdout);
+                    final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
+                    pullProcessBuilder.redirectOutput(stdout);
 
-                        final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
-                        pullProcessBuilder.redirectError(stderr);
+                    final InMemoryCharacterToByteStream stderr = InMemoryCharacterToByteStream.create();
+                    pullProcessBuilder.redirectError(stderr);
 
-                        test.assertEqual(0, pullProcessBuilder.run().await());
-                        test.assertEqual(
-                            Iterable.create(
-                                "Already up to date."),
-                            Strings.getLines(stdout.getText().await()));
-                        test.assertEqual(
-                            Iterable.create(),
-                            Strings.getLines(stderr.getText().await()));
-                    }
-                    finally
-                    {
-                        testRepoFolder.delete().await();
-                    }
+                    test.assertEqual(0, pullProcessBuilder.run().await());
+                    test.assertEqual(
+                        Iterable.create(
+                            "Already up to date."),
+                        Strings.getLines(stdout.getText().await()));
+                    test.assertEqual(
+                        Iterable.create(),
+                        Strings.getLines(stderr.getText().await()));
                 });
             });
         });

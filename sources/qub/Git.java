@@ -5,26 +5,39 @@ package qub;
  */
 public class Git
 {
-    private final Process process;
+    private final ProcessFactory processFactory;
 
-    private Git(Process process)
+    private Git(ProcessFactory processFactory)
     {
-        PreCondition.assertNotNull(process, "process");
+        PreCondition.assertNotNull(processFactory, "processFactory");
 
-        this.process = process;
+        this.processFactory = processFactory;
     }
 
     /**
      * Create a new GitExecutable object that can be used to invoke "git" operations using the Git
      * executable found on the system's path.
-     * @param process The process of the current application.
-     * @return The new GitExecutable object.
+     * @param process The process that will be used to invoke the "git" process.
+     * @return The new Git object.
      */
-    public static Git create(Process process)
+    public static Git create(DesktopProcess process)
     {
         PreCondition.assertNotNull(process, "process");
 
-        return new Git(process);
+        return Git.create(process.getProcessFactory());
+    }
+
+    /**
+     * Create a new GitExecutable object that can be used to invoke "git" operations using the Git
+     * executable found on the system's path.
+     * @param processFactory The process factory that will be used to invoke the "git" process.
+     * @return The new Git object.
+     */
+    public static Git create(ProcessFactory processFactory)
+    {
+        PreCondition.assertNotNull(processFactory, "processFactory");
+
+        return new Git(processFactory);
     }
 
     /**
@@ -33,7 +46,7 @@ public class Git
      */
     public Result<ProcessBuilder> getGitProcessBuilder()
     {
-        return process.getProcessBuilder("git");
+        return this.processFactory.getProcessBuilder("git");
     }
 
     /**

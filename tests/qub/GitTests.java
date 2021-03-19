@@ -6,18 +6,39 @@ public interface GitTests
     {
         runner.testGroup(Git.class, () ->
         {
-            runner.testGroup("create(Process)", () ->
+            runner.testGroup("create(DesktopProcess)", () ->
             {
                 runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> Git.create(null),
+                    test.assertThrows(() -> Git.create((DesktopProcess)null),
                         new PreConditionFailure("process cannot be null."));
                 });
 
                 runner.test("with non-null", (Test test) ->
                 {
-                    final Git git = Git.create(test.getProcess());
-                    test.assertNotNull(git);
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
+                    {
+                        final Git git = Git.create(process);
+                        test.assertNotNull(git);
+                    }
+                });
+            });
+
+            runner.testGroup("create(ProcessFactory)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    test.assertThrows(() -> Git.create((ProcessFactory)null),
+                        new PreConditionFailure("processFactory cannot be null."));
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
+                    {
+                        final Git git = Git.create(process.getProcessFactory());
+                        test.assertNotNull(git);
+                    }
                 });
             });
 
@@ -27,8 +48,11 @@ public interface GitTests
                 {
                     runner.test("with " + Strings.escapeAndQuote(repository), (Test test) ->
                     {
-                        final Git git = Git.create(test.getProcess());
-                        test.assertThrows(() -> git.getCloneProcessBuilder(repository).await(), expected);
+                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
+                        {
+                            final Git git = Git.create(process);
+                            test.assertThrows(() -> git.getCloneProcessBuilder(repository).await(), expected);
+                        }
                     });
                 };
 
@@ -39,13 +63,16 @@ public interface GitTests
                 {
                     runner.test("with " + Strings.escapeAndQuote(repository), (Test test) ->
                     {
-                        final Git git = Git.create(test.getProcess());
-                        final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder(repository).await();
-                        test.assertNotNull(cloneProcessBuilder);
-                        test.assertEqual(repository, cloneProcessBuilder.getRepository());
-                        test.assertNull(cloneProcessBuilder.getDirectory());
-                        test.assertEqual(Path.parse("git"), cloneProcessBuilder.getExecutablePath());
-                        test.assertEqual(Iterable.create("clone"), cloneProcessBuilder.getArguments());
+                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
+                        {
+                            final Git git = Git.create(process);
+                            final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder(repository).await();
+                            test.assertNotNull(cloneProcessBuilder);
+                            test.assertEqual(repository, cloneProcessBuilder.getRepository());
+                            test.assertNull(cloneProcessBuilder.getDirectory());
+                            test.assertEqual(Path.parse("git"), cloneProcessBuilder.getExecutablePath());
+                            test.assertEqual(Iterable.create("clone"), cloneProcessBuilder.getArguments());
+                        }
                     });
                 };
 
@@ -56,11 +83,14 @@ public interface GitTests
 
             runner.test("getPullProcessBuilder()", (Test test) ->
             {
-                final Git git = Git.create(test.getProcess());
-                final GitPullProcessBuilder pullProcessBuilder = git.getPullProcessBuilder().await();
-                test.assertNotNull(pullProcessBuilder);
-                test.assertEqual(Path.parse("git"), pullProcessBuilder.getExecutablePath());
-                test.assertEqual(Iterable.create("pull"), pullProcessBuilder.getArguments());
+                try (final FakeDesktopProcess process = FakeDesktopProcess.create())
+                {
+                    final Git git = Git.create(process);
+                    final GitPullProcessBuilder pullProcessBuilder = git.getPullProcessBuilder().await();
+                    test.assertNotNull(pullProcessBuilder);
+                    test.assertEqual(Path.parse("git"), pullProcessBuilder.getExecutablePath());
+                    test.assertEqual(Iterable.create("pull"), pullProcessBuilder.getArguments());
+                }
             });
         });
     }

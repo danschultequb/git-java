@@ -4,6 +4,12 @@ public interface GitPullProcessBuilderTests
 {
     static void test(TestRunner runner)
     {
+        GitPullArgumentsTests.test(runner, (DesktopProcess process) ->
+        {
+            final Git git = Git.create(process);
+            return git.getPullProcessBuilder().await();
+        });
+
         runner.testGroup(GitPullProcessBuilder.class,
             (TestResources resources) -> Tuple.create(resources.getProcessFactory()),
             (ProcessFactory processFactory) ->
@@ -19,16 +25,13 @@ public interface GitPullProcessBuilderTests
                 runner.test("with non-null", (Test test) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
+                    final GitProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
                     final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder);
                     test.assertNotNull(pullProcessBuilder);
-                    test.assertEqual(
-                        Path.parse("git"),
-                        pullProcessBuilder.getExecutablePath());
-                    test.assertEqual(
-                        Iterable.create(
-                            "pull"),
-                        pullProcessBuilder.getArguments());
+                    test.assertEqual(Path.parse("git"), pullProcessBuilder.getExecutablePath());
+                    test.assertEqual(Iterable.create("pull"), pullProcessBuilder.getArguments());
+                    test.assertEqual(Iterable.create(), pullProcessBuilder.getGitArguments());
+                    test.assertEqual(Iterable.create(), pullProcessBuilder.getCommandArguments());
                 });
             });
 
@@ -39,8 +42,7 @@ public interface GitPullProcessBuilderTests
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                    final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
+                    final GitPullProcessBuilder pullProcessBuilder = git.getPullProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
@@ -55,24 +57,24 @@ public interface GitPullProcessBuilderTests
                         Strings.getLines(stdout.getText().await()));
                     test.assertEqual(
                         Iterable.create(
-                            "fatal: not a git repository (or any of the parent directories): .git"
-                        ),
+                            "fatal: not a git repository (or any of the parent directories): .git"),
                         Strings.getLines(stderr.getText().await()));
                 });
 
                 runner.test("in a repository that was just cloned",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
 
-                    git.getCloneProcessBuilder("https://github.com/danschultequb/csv-java").await()
-                        .setDirectory(temporaryFolder)
+                    git.getCloneProcessBuilder().await()
+                        .addRepository("https://github.com/danschultequb/csv-java")
+                        .addDirectory(temporaryFolder)
                         .run()
                         .await();
 
-                    final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                    final GitPullProcessBuilder pullProcessBuilder = GitPullProcessBuilder.create(gitProcessBuilder)
+                    final GitPullProcessBuilder pullProcessBuilder = git.getPullProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();

@@ -6,49 +6,34 @@ public interface GitCloneProcessBuilderTests
     {
         runner.testGroup(GitCloneProcessBuilder.class, () ->
         {
-            runner.testGroup("create(ProcessBuilder,String)", () ->
+            GitCloneArgumentsTests.test(runner, (DesktopProcess process) ->
             {
-                runner.test("with null ProcessBuilder", (Test test) ->
+                final GitProcessBuilder gitProcessBuilder = Git.create(process).getGitProcessBuilder().await();
+                return GitCloneProcessBuilder.create(gitProcessBuilder);
+            });
+
+            runner.testGroup("create(GitProcessBuilder)", () ->
+            {
+                runner.test("with null", (Test test) ->
                 {
-                    test.assertThrows(() -> GitCloneProcessBuilder.create(null, "foo"),
+                    test.assertThrows(() -> GitCloneProcessBuilder.create(null),
                         new PreConditionFailure("gitProcessBuilder cannot be null."));
                 });
 
-                final Action2<String,Throwable> createErrorTest = (String repository, Throwable expected) ->
+                runner.test("with non-null",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
                 {
-                    runner.test("with " + Strings.escapeAndQuote(repository) + " repository", (Test test) ->
-                    {
-                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                        {
-                            final Git git = Git.create(process);
-                            final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                            test.assertThrows(() -> GitCloneProcessBuilder.create(gitProcessBuilder, repository), expected);
-                        }
-                    });
-                };
-
-                createErrorTest.run(null, new PreConditionFailure("repository cannot be null."));
-                createErrorTest.run("", new PreConditionFailure("repository cannot be empty."));
-
-                final Action1<String> createTest = (String repository) ->
-                {
-                    runner.test("with " + Strings.escapeAndQuote(repository) + " repository", (Test test) ->
-                    {
-                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                        {
-                            final Git git = Git.create(process);
-                            final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                            final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, repository);
-                            test.assertNotNull(cloneProcessBuilder);
-                            test.assertEqual(repository, cloneProcessBuilder.getRepository());
-                            test.assertNull(cloneProcessBuilder.getDirectory());
-                        }
-                    });
-                };
-                
-                createTest.run("foo");
-                createTest.run("https://github.com/danschultequb/git-java");
-                createTest.run("https://github.com/danschultequb/git-java.git");
+                    final GitProcessBuilder gitProcessBuilder = Git.create(process).getGitProcessBuilder().await();
+                    final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder);
+                    test.assertNotNull(cloneProcessBuilder);
+                    test.assertEqual(gitProcessBuilder.getWorkingFolderPath(), cloneProcessBuilder.getWorkingFolderPath());
+                    test.assertEqual(gitProcessBuilder.getExecutablePath(), cloneProcessBuilder.getExecutablePath());
+                    test.assertEqual(Iterable.create("clone"), cloneProcessBuilder.getArguments());
+                    test.assertEqual(Iterable.create(), cloneProcessBuilder.getGitArguments());
+                    test.assertEqual(Iterable.create(), cloneProcessBuilder.getCommandArguments());
+                    test.assertEqual("/: git clone", cloneProcessBuilder.getCommand());
+                });
             });
 
             runner.testGroup("run()",
@@ -58,7 +43,8 @@ public interface GitCloneProcessBuilderTests
                 runner.test("with invalid repository", (Test test) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("foo").await();
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
+                        .addRepository("foo");
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -86,12 +72,14 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
-                        .setWorkingFolder(temporaryFolder);
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
+                        .setWorkingFolder(temporaryFolder)
+                        .addRepository("https://github.com/danschultequb/git-java");
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -125,8 +113,9 @@ public interface GitCloneProcessBuilderTests
                     final Folder csvJavaFolder = currentFolder.getFolder("../csv-java").await();
                     final Path relativePath = csvJavaFolder.relativeTo(temporaryFolder);
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder(relativePath.toString()).await()
-                        .setWorkingFolder(temporaryFolder);
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
+                        .setWorkingFolder(temporaryFolder)
+                        .addRepository(relativePath);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -155,13 +144,15 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository and relative path directory when parent folder exists",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder)
-                        .setDirectory("relative-path-repo");
+                        .addRepository("https://github.com/danschultequb/git-java")
+                        .addDirectory("relative-path-repo");
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -190,14 +181,16 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository and relative path directory when parent folder exists with progress",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder)
-                        .setDirectory("relative-path-repo")
-                        .setProgress(true);
+                        .addProgress()
+                        .addRepository("https://github.com/danschultequb/git-java")
+                        .addDirectory("relative-path-repo");
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -228,13 +221,15 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository and relative path directory when parent folder doesn't exists",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder)
-                        .setDirectory("relative/path/repo");
+                        .addRepository("https://github.com/danschultequb/git-java")
+                        .addDirectory("relative/path/repo");
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -263,13 +258,15 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository and rooted path directory when parent folder exists",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Folder rootedPathRepoFolder = temporaryFolder.getFolder("rooted-path-repo").await();
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
-                        .setDirectory(rootedPathRepoFolder.toString());
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
+                        .addRepository("https://github.com/danschultequb/git-java")
+                        .addDirectory(rootedPathRepoFolder);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -298,15 +295,17 @@ public interface GitCloneProcessBuilderTests
                 });
 
                 runner.test("with URL repository and rooted path directory when parent folder doesn't exists",
+                    GitTests.skipRealTests,
                     (TestResources resources) -> Tuple.create(resources.getTemporaryFolder(true)),
                     (Test test, Folder temporaryFolder) ->
                 {
                     final Folder rootedFolder = temporaryFolder.getFolder("rooted").await();
                     final Folder rootedPathRepoFolder = rootedFolder.getFolder("path/repo").await();
                     final Git git = Git.create(processFactory);
-                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder("https://github.com/danschultequb/git-java").await()
+                    final GitCloneProcessBuilder cloneProcessBuilder = git.getCloneProcessBuilder().await()
                         .setWorkingFolder(temporaryFolder)
-                        .setDirectory(rootedPathRepoFolder.toString());
+                        .addRepository("https://github.com/danschultequb/git-java")
+                        .addDirectory(rootedPathRepoFolder);
 
                     final InMemoryCharacterToByteStream stdout = InMemoryCharacterToByteStream.create();
                     cloneProcessBuilder.redirectOutput(stdout);
@@ -332,108 +331,6 @@ public interface GitCloneProcessBuilderTests
                             "\"https://github.com/danschultequb/git-java\"",
                             Strings.escapeAndQuote(rootedPathRepoFolder)),
                         cloneProcessBuilder.getArguments());
-                });
-            });
-
-            runner.testGroup("setProgress(Boolean)", () ->
-            {
-                final Action1<Boolean> setProgressTest = (Boolean progress) ->
-                {
-                    runner.test("with " + Strings.escapeAndQuote(progress), (Test test) ->
-                    {
-                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                        {
-                            final Git git = Git.create(process);
-                            final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                            final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
-                            final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setProgress(progress);
-                            test.assertSame(cloneProcessBuilder, setDirectoryResult);
-                            test.assertEqual(progress, cloneProcessBuilder.getProgress());
-                        }
-                    });
-                };
-
-                setProgressTest.run(null);
-                setProgressTest.run(false);
-                setProgressTest.run(true);
-            });
-
-            runner.testGroup("setDirectory(String)", () ->
-            {
-                final Action1<String> setDirectoryTest = (String directory) ->
-                {
-                    runner.test("with " + Strings.escapeAndQuote(directory), (Test test) ->
-                    {
-                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                        {
-                            final Git git = Git.create(process);
-                            final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                            final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
-                            final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory(directory);
-                            test.assertSame(cloneProcessBuilder, setDirectoryResult);
-                            test.assertEqual(directory, cloneProcessBuilder.getDirectory());
-                        }
-                    });
-                };
-
-                setDirectoryTest.run(null);
-                setDirectoryTest.run("");
-                setDirectoryTest.run("hello");
-                setDirectoryTest.run("/hello");
-                setDirectoryTest.run("/hello/");
-            });
-
-            runner.testGroup("setDirectory(Path)", () ->
-            {
-                final Action1<Path> setDirectoryTest = (Path directory) ->
-                {
-                    runner.test("with " + Strings.escapeAndQuote(directory), (Test test) ->
-                    {
-                        try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                        {
-                            final Git git = Git.create(process);
-                            final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                            final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
-                            final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory(directory);
-                            test.assertSame(cloneProcessBuilder, setDirectoryResult);
-                            test.assertEqual(directory, cloneProcessBuilder.getDirectory());
-                        }
-                    });
-                };
-
-                setDirectoryTest.run(null);
-                setDirectoryTest.run(Path.parse("hello"));
-                setDirectoryTest.run(Path.parse("/hello"));
-                setDirectoryTest.run(Path.parse("/hello/"));
-            });
-
-            runner.testGroup("setDirectory(Folder)", () ->
-            {
-                runner.test("with null", (Test test) ->
-                {
-                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                    {
-                        final Git git = Git.create(process);
-                        final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                        final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
-                        final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory((Folder)null);
-                        test.assertSame(cloneProcessBuilder, setDirectoryResult);
-                        test.assertEqual(null, cloneProcessBuilder.getDirectory());
-                    }
-                });
-
-                runner.test("with non-null", (Test test) ->
-                {
-                    try (final FakeDesktopProcess process = FakeDesktopProcess.create())
-                    {
-                        final Folder currentFolder = process.getCurrentFolder();
-                        final Git git = Git.create(process);
-                        final ProcessBuilder gitProcessBuilder = git.getGitProcessBuilder().await();
-                        final GitCloneProcessBuilder cloneProcessBuilder = GitCloneProcessBuilder.create(gitProcessBuilder, "https://github.com/danschultequb/git-java");
-                        final GitCloneProcessBuilder setDirectoryResult = cloneProcessBuilder.setDirectory(currentFolder);
-                        test.assertSame(cloneProcessBuilder, setDirectoryResult);
-                        test.assertEqual(currentFolder.toString(), cloneProcessBuilder.getDirectory());
-                    }
                 });
             });
         });

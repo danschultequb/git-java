@@ -44,23 +44,23 @@ public class Git
      * Get a ProcessBuilder that can be used to run the git executable.
      * @return A ProcessBuilder that can be used to run the git executable.
      */
-    public Result<ProcessBuilder> getGitProcessBuilder()
+    public Result<GitProcessBuilder> getGitProcessBuilder()
     {
-        return this.processFactory.getProcessBuilder("git");
+        return Result.create(() ->
+        {
+            return GitProcessBuilder.create(this.processFactory.getProcessBuilder("git").await());
+        });
     }
 
     /**
      * Get a GitCloneProcessBuilder that can be used to invoke the "git clone" operation.
-     * @param repository The location of the repository to clone.
      * @return The GitCloneProcessBuilder that can be used to invoke the "git clone" operation.
      */
-    public Result<GitCloneProcessBuilder> getCloneProcessBuilder(String repository)
+    public Result<GitCloneProcessBuilder> getCloneProcessBuilder()
     {
-        PreCondition.assertNotNullAndNotEmpty(repository, "repository");
-
         return Result.create(() ->
         {
-            return GitCloneProcessBuilder.create(this.getGitProcessBuilder().await(), repository);
+            return GitCloneProcessBuilder.create(this.getGitProcessBuilder().await());
         });
     }
 
@@ -73,6 +73,18 @@ public class Git
         return Result.create(() ->
         {
             return GitPullProcessBuilder.create(this.getGitProcessBuilder().await());
+        });
+    }
+
+    /**
+     * Get a GitInitProcessBuilder that can be used to invoke the "git init" operation.
+     * @return The GitInitProcessBuilder that can be used to invoke the "git init" operation.
+     */
+    public Result<GitInitProcessBuilder> getInitProcessBuilder()
+    {
+        return Result.create(() ->
+        {
+            return GitInitProcessBuilder.create(this.getGitProcessBuilder().await());
         });
     }
 }

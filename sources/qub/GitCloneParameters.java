@@ -1,14 +1,47 @@
 package qub;
 
-public interface GitCloneArguments<T> extends GitCommandArguments<T>
+public class GitCloneParameters extends GitParametersDecorator<GitCloneParameters>
 {
+    private GitCloneParameters(Path executablePath)
+    {
+        super(executablePath);
+
+        this.addCommandArgument("clone");
+    }
+
+    public static GitCloneParameters create()
+    {
+        return GitCloneParameters.create("git");
+    }
+
+    public static GitCloneParameters create(String executablePath)
+    {
+        PreCondition.assertNotNullAndNotEmpty(executablePath, "executablePath");
+
+        return GitCloneParameters.create(Path.parse(executablePath));
+    }
+
+    public static GitCloneParameters create(Path executablePath)
+    {
+        PreCondition.assertNotNull(executablePath, "executablePath");
+
+        return new GitCloneParameters(executablePath);
+    }
+
+    public static GitCloneParameters create(File executableFile)
+    {
+        PreCondition.assertNotNull(executableFile, "executableFile");
+
+        return GitCloneParameters.create(executableFile.getPath());
+    }
+    
     /**
      * Operate quietly. Progress is not reported to the standard error stream.
      * @return This object for method chaining.
      */
-    default T addQuiet()
+    public GitCloneParameters addQuiet()
     {
-        return this.addCommandArguments("--quiet");
+        return this.addCommandArgument("--quiet");
     }
 
     /**
@@ -16,9 +49,9 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * stream.
      * @return This object for method chaining.
      */
-    default T addVerbose()
+    public GitCloneParameters addVerbose()
     {
-        return this.addCommandArguments("--verbose");
+        return this.addCommandArgument("--verbose");
     }
 
     /**
@@ -27,9 +60,9 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * error stream is not directed to a terminal.
      * @return This object for method chaining.
      */
-    default T addProgress()
+    public GitCloneParameters addProgress()
     {
-        return this.addCommandArguments("--progress");
+        return this.addCommandArgument("--progress");
     }
 
     /**
@@ -37,12 +70,11 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param repository The (possibly remote repository to clone from.
      * @return This object for method chaining.
      */
-    default T addRepository(String repository)
+    public GitCloneParameters addRepository(String repository)
     {
         PreCondition.assertNotNullAndNotEmpty(repository, "repository");
-        PreCondition.assertFalse(this.hasRepository(), "this.hasRepository()");
 
-        return this.addCommandArguments(Strings.escapeAndQuote(repository));
+        return this.addCommandArgument(repository);
     }
 
     /**
@@ -50,7 +82,19 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param repository The (possibly remote repository to clone from.
      * @return This object for method chaining.
      */
-    default T addRepository(URL repository)
+    public GitCloneParameters addRepository(URL repository)
+    {
+        PreCondition.assertNotNull(repository, "repository");
+
+        return this.addRepository(repository.toString(true));
+    }
+
+    /**
+     * The (possibly remote) repository to clone from.
+     * @param repository The (possibly remote repository to clone from.
+     * @return This object for method chaining.
+     */
+    public GitCloneParameters addRepository(Path repository)
     {
         PreCondition.assertNotNull(repository, "repository");
 
@@ -62,19 +106,7 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param repository The (possibly remote repository to clone from.
      * @return This object for method chaining.
      */
-    default T addRepository(Path repository)
-    {
-        PreCondition.assertNotNull(repository, "repository");
-
-        return this.addRepository(repository.toString());
-    }
-
-    /**
-     * The (possibly remote) repository to clone from.
-     * @param repository The (possibly remote repository to clone from.
-     * @return This object for method chaining.
-     */
-    default T addRepository(Folder repository)
+    public GitCloneParameters addRepository(Folder repository)
     {
         PreCondition.assertNotNull(repository, "repository");
 
@@ -82,12 +114,6 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
     }
 
     /**
-     * Get whether or not a repository has been added.
-     * @return Whether or not a repository has been added.
-     */
-    boolean hasRepository();
-
-    /**
      * The name of a new directory to clone into. The "humanish" part of the source repository is
      * used if no directory is explicitly given (repo for /path/to/repo.git and foo for
      * host.xz:foo/.git). Cloning into an existing directory is only allowed if the directory is
@@ -95,13 +121,11 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param directory The path to the directory to clone into.
      * @return This object for method chaining.
      */
-    default T addDirectory(String directory)
+    public GitCloneParameters addDirectory(String directory)
     {
         PreCondition.assertNotNullAndNotEmpty(directory, "directory");
-        PreCondition.assertTrue(this.hasRepository(), "this.hasRepository()");
-        PreCondition.assertFalse(this.hasDirectory(), "this.hasDirectory()");
 
-        return this.addCommandArguments(Strings.escapeAndQuote(directory));
+        return this.addCommandArgument(directory);
     }
 
     /**
@@ -112,7 +136,7 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param directory The path to the directory to clone into.
      * @return This object for method chaining.
      */
-    default T addDirectory(Path directory)
+    public GitCloneParameters addDirectory(Path directory)
     {
         PreCondition.assertNotNull(directory, "directory");
 
@@ -127,16 +151,10 @@ public interface GitCloneArguments<T> extends GitCommandArguments<T>
      * @param directory The directory to clone into.
      * @return This object for method chaining.
      */
-    default T addDirectory(Folder directory)
+    public GitCloneParameters addDirectory(Folder directory)
     {
         PreCondition.assertNotNull(directory, "directory");
 
         return this.addDirectory(directory.getPath());
     }
-
-    /**
-     * Get whether or not a directory has been added.
-     * @return Whether or not a directory has been added.
-     */
-    boolean hasDirectory();
 }

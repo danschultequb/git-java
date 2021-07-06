@@ -1,14 +1,47 @@
 package qub;
 
-public interface GitInitArguments<T> extends GitCommandArguments<T>
+public class GitInitParameters extends GitParametersDecorator<GitInitParameters>
 {
+    private GitInitParameters(Path executablePath)
+    {
+        super(executablePath);
+
+        this.addCommandArgument("init");
+    }
+
+    static GitInitParameters create()
+    {
+        return GitInitParameters.create("git");
+    }
+
+    static GitInitParameters create(String executablePath)
+    {
+        PreCondition.assertNotNullAndNotEmpty(executablePath, "executablePath");
+
+        return GitInitParameters.create(Path.parse(executablePath));
+    }
+
+    static GitInitParameters create(Path executablePath)
+    {
+        PreCondition.assertNotNull(executablePath, "executablePath");
+
+        return new GitInitParameters(executablePath);
+    }
+
+    static GitInitParameters create(File executableFile)
+    {
+        PreCondition.assertNotNull(executableFile, "executableFile");
+
+        return GitInitParameters.create(executableFile.getPath());
+    }
+    
     /**
      * Operate quietly. Progress is not reported to the standard error stream.
      * @return This object for method chaining.
      */
-    default T addQuiet()
+    public GitInitParameters addQuiet()
     {
-        return this.addCommandArguments("--quiet");
+        return this.addCommandArgument("--quiet");
     }
 
     /**
@@ -16,9 +49,9 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * working directory.
      * @return This object for method chaining.
      */
-    default T addBare()
+    public GitInitParameters addBare()
     {
-        return this.addCommandArguments("--bare");
+        return this.addCommandArgument("--bare");
     }
 
     /**
@@ -27,11 +60,11 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param templateDirectory The path to the directory that will be used as a template.
      * @return This object for method chaining.
      */
-    default T addTemplate(String templateDirectory)
+    public GitInitParameters addTemplate(String templateDirectory)
     {
         PreCondition.assertNotNullAndNotEmpty(templateDirectory, "templateDirectory");
 
-        return this.addCommandArguments("--template=" + Strings.escapeAndQuote(templateDirectory));
+        return this.addCommandArgument("--template=" + Strings.escapeAndQuote(templateDirectory));
     }
 
     /**
@@ -40,7 +73,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param templateDirectory The path to the directory that will be used as a template.
      * @return This object for method chaining.
      */
-    default T addTemplate(Path templateDirectory)
+    public GitInitParameters addTemplate(Path templateDirectory)
     {
         PreCondition.assertNotNull(templateDirectory, "templateDirectory");
 
@@ -53,7 +86,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param templateDirectory The path to the directory that will be used as a template.
      * @return This object for method chaining.
      */
-    default T addTemplate(Folder templateDirectory)
+    public GitInitParameters addTemplate(Folder templateDirectory)
     {
         PreCondition.assertNotNull(templateDirectory, "templateDirectory");
 
@@ -69,11 +102,11 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param separateGitDir The path to the separate git directory.
      * @return This object for method chaining.
      */
-    default T addSeparateGitDir(String separateGitDir)
+    public GitInitParameters addSeparateGitDir(String separateGitDir)
     {
         PreCondition.assertNotNullAndNotEmpty(separateGitDir, "separateGitDir");
 
-        return this.addCommandArguments("--separate-git-dir=" + Strings.escapeAndQuote(separateGitDir));
+        return this.addCommandArgument("--separate-git-dir=" + Strings.escapeAndQuote(separateGitDir));
     }
 
     /**
@@ -85,7 +118,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param separateGitDir The path to the separate git directory.
      * @return This object for method chaining.
      */
-    default T addSeparateGitDir(Path separateGitDir)
+    public GitInitParameters addSeparateGitDir(Path separateGitDir)
     {
         PreCondition.assertNotNull(separateGitDir, "separateGitDir");
 
@@ -101,7 +134,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param separateGitDir The path to the separate git directory.
      * @return This object for method chaining.
      */
-    default T addSeparateGitDir(Folder separateGitDir)
+    public GitInitParameters addSeparateGitDir(Folder separateGitDir)
     {
         PreCondition.assertNotNull(separateGitDir, "separateGitDir");
 
@@ -115,7 +148,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param initialBranch The name to use for the initial branch.
      * @return This object for method chaining.
      */
-    default T addInitialBranch(String initialBranch)
+    public GitInitParameters addInitialBranch(String initialBranch)
     {
         PreCondition.assertNotNullAndNotEmpty(initialBranch, "initialBranch");
 
@@ -127,11 +160,11 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param directory The directory to create the new repository in.
      * @return This object for method chaining.
      */
-    default T addDirectory(String directory)
+    public GitInitParameters addDirectory(String directory)
     {
         PreCondition.assertNotNullAndNotEmpty(directory, "directory");
 
-        return this.addCommandArguments(directory);
+        return this.addCommandArgument(directory);
     }
 
     /**
@@ -139,7 +172,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param directory The directory to create the new repository in.
      * @return This object for method chaining.
      */
-    default T addDirectory(Path directory)
+    public GitInitParameters addDirectory(Path directory)
     {
         PreCondition.assertNotNull(directory, "directory");
 
@@ -151,7 +184,7 @@ public interface GitInitArguments<T> extends GitCommandArguments<T>
      * @param directory The directory to create the new repository in.
      * @return This object for method chaining.
      */
-    default T addDirectory(Folder directory)
+    public GitInitParameters addDirectory(Folder directory)
     {
         PreCondition.assertNotNull(directory, "directory");
 

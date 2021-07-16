@@ -3,17 +3,11 @@ package qub;
 /**
  * An object that allows applications to invoke Git operations.
  */
-public class Git
+public class Git extends ChildProcessRunnerWrapper<Git,GitParameters>
 {
-    private final ChildProcessRunner childProcessRunner;
-    private Path executablePath;
-    
     private Git(ChildProcessRunner childProcessRunner)
     {
-        PreCondition.assertNotNull(childProcessRunner, "childProcessRunner");
-        
-        this.childProcessRunner = childProcessRunner;
-        this.executablePath = Path.parse("git");
+        super(childProcessRunner, GitParameters::create, "git");
     }
     
     /**
@@ -41,81 +35,12 @@ public class Git
         return new Git(childProcessRunner);
     }
 
-    public Path getExecutablePath()
-    {
-        return this.executablePath;
-    }
-
-    public Git setExecutablePath(String executablePath)
-    {
-        PreCondition.assertNotNullAndNotEmpty(executablePath, "executablePath");
-
-        return this.setExecutablePath(Path.parse(executablePath));
-    }
-
-    public Git setExecutablePath(Path executablePath)
-    {
-        PreCondition.assertNotNull(executablePath, "executablePath");
-
-        this.executablePath = executablePath;
-
-        return this;
-    }
-
-    public Git setExecutable(File executable)
-    {
-        PreCondition.assertNotNull(executable, "executable");
-
-        return this.setExecutablePath(executable.getPath());
-    }
-
-    private <T extends GitParameters> T addParameterDefaults(Function1<Path,T> creator)
-    {
-        return creator.run(this.executablePath);
-    }
-
-    public Result<Integer> run(String... arguments)
-    {
-        PreCondition.assertNotNull(arguments, "arguments");
-
-        return this.run(Iterable.create(arguments));
-    }
-
-    public Result<Integer> run(Iterable<String> arguments)
-    {
-        PreCondition.assertNotNull(arguments, "arguments");
-
-        return this.run(this.addParameterDefaults(GitParameters::create).addArguments(arguments));
-    }
-
-    public Result<Integer> run(GitParameters parameters)
-    {
-        PreCondition.assertNotNull(parameters, "parameters");
-
-        return this.childProcessRunner.run(parameters);
-    }
-
-    public Result<Integer> run(Action1<GitParameters> parametersSetup)
-    {
-        return this.run(GitParameters::create, parametersSetup);
-    }
-
-    private <T extends GitParameters> Result<Integer> run(Function1<Path,T> parametersCreator, Action1<T> parametersSetup)
-    {
-        PreCondition.assertNotNull(parametersCreator, "parametersCreator");
-        PreCondition.assertNotNull(parametersSetup, "parametersSetup");
-
-        final T parameters = this.addParameterDefaults(parametersCreator);
-        parametersSetup.run(parameters);
-        return this.run(parameters);
-    }
-
     public Result<VersionNumber> version()
     {
         return Result.create(() ->
         {
             final InMemoryCharacterToByteStream output = InMemoryCharacterToByteStream.create();
-            this.run(parameters ->
+            this.run((GitParameters parameters) ->
             {
                 parameters.addArgument("--version");
                 parameters.redirectOutputTo(output);

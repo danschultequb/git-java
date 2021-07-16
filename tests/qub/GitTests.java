@@ -284,7 +284,7 @@ public interface GitTests
                     (Test test, FakeDesktopProcess process) ->
                 {
                     final Git git = Git.create(process);
-                    test.assertThrows(() -> git.setExecutable((File)null),
+                    test.assertThrows(() -> git.setExecutablePath((File)null),
                         new PreConditionFailure("executable cannot be null."));
                     test.assertEqual(Path.parse("git"), git.getExecutablePath());
                 });
@@ -295,8 +295,8 @@ public interface GitTests
                 {
                     final File file = process.getFileSystem().getFile("/rooted/git").await();
                     final Git git = Git.create(process);
-                    final Git setExecutableResult = git.setExecutable(file);
-                    test.assertSame(git, setExecutableResult);
+                    final Git setExecutablePathResult = git.setExecutablePath(file);
+                    test.assertSame(git, setExecutablePathResult);
                     test.assertEqual(file.getPath(), git.getExecutablePath());
                 });
             });

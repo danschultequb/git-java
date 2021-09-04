@@ -86,7 +86,7 @@ public interface GitTests
                 {
                     CharacterWriteStream.create(output)
                         .writeLines(Iterable.create(
-                            "git version 2.32.0.windows.1"))
+                            "git version 2.33.0.windows.2"))
                         .await();
                     return 0;
                 }));
@@ -470,7 +470,7 @@ public interface GitTests
                                 .await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.32.0.windows.1"),
+                                    "git version 2.33.0.windows.2"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -584,7 +584,7 @@ public interface GitTests
                             }).await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.32.0.windows.1"),
+                                    "git version 2.33.0.windows.2"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -601,9 +601,9 @@ public interface GitTests
                         test.assertEqual(
                             VersionNumber.create()
                                 .setMajor(2)
-                                .setMinor(32)
+                                .setMinor(33)
                                 .setPatch(0)
-                                .setSuffix(".windows.1"),
+                                .setSuffix(".windows.2"),
                             version);
                     });
 

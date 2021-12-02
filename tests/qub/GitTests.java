@@ -28,9 +28,9 @@ public interface GitTests
 
             final FakeChildProcessRunner fakeChildProcessRunner = fakeDesktopProcess.getChildProcessRunner();
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git")
-                .setFunction((ByteWriteStream output) ->
+                .setAction((FakeDesktopProcess childProcess) ->
                 {
-                    CharacterWriteStream.create(output)
+                    childProcess.getOutputWriteStream()
                         .writeLines(Iterable.create(
                             "usage: git [--version] [--help] [-C <path>] [-c <name>=<value>]",
                             "           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]",
@@ -78,21 +78,20 @@ public interface GitTests
                             "to read about a specific subcommand or concept.",
                             "See 'git help git' for an overview of the system."))
                         .await();
-                    return 1;
+                    childProcess.setExitCode(1);
                 }));
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git", "--version")
-                .setFunction((ByteWriteStream output) ->
+                .setAction((FakeDesktopProcess childProcess) ->
                 {
-                    CharacterWriteStream.create(output)
+                    childProcess.getOutputWriteStream()
                         .writeLines(Iterable.create(
-                            "git version 2.34.0.windows.1"))
+                            "git version 2.34.1.windows.1"))
                         .await();
-                    return 0;
                 }));
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git", "clone")
-                .setFunction((ByteWriteStream output, ByteWriteStream error) ->
+                .setAction((FakeDesktopProcess childProcess) ->
                 {
-                    CharacterWriteStream.create(error)
+                    childProcess.getErrorWriteStream()
                         .writeLines(Iterable.create(
                             "fatal: You must specify a repository to clone.",
                             "",
@@ -144,16 +143,15 @@ public interface GitTests
                             "    --sparse              initialize sparse-checkout file to include only files at root",
                             ""))
                         .await();
-                    return 129;
+                    childProcess.setExitCode(129);
                 }));
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git", "clone", "https://github.com/github/choosealicense.com")
-                .setFunction((ByteWriteStream output, ByteWriteStream error) ->
+                .setAction((FakeDesktopProcess childProcess) ->
                 {
-                    CharacterWriteStream.create(error)
+                    childProcess.getErrorWriteStream()
                         .writeLines(Iterable.create(
                             "Cloning into 'choosealicense.com'..."))
                         .await();
-                    return 0;
                 }));
 
             addDesktopProcess.run(fakeDesktopProcess);
@@ -468,7 +466,7 @@ public interface GitTests
                                 .await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.34.0.windows.1"),
+                                    "git version 2.34.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -581,7 +579,7 @@ public interface GitTests
                             }).await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.34.0.windows.1"),
+                                    "git version 2.34.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -599,7 +597,7 @@ public interface GitTests
                             VersionNumber.create()
                                 .setMajor(2)
                                 .setMinor(34)
-                                .setPatch(0)
+                                .setPatch(1)
                                 .setSuffix(".windows.1"),
                             version);
                     });

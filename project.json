@@ -1,7 +1,7 @@
 {
   "publisher": "qub",
   "project": "git-java",
-  "version": "47",
+  "version": "48",
   "java": {
     "dependencies": [
       {

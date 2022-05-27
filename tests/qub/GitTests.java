@@ -85,7 +85,7 @@ public interface GitTests
                 {
                     childProcess.getOutputWriteStream()
                         .writeLines(Iterable.create(
-                            "git version 2.35.1.windows.2"))
+                            "git version 2.36.1.windows.1"))
                         .await();
                 }));
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git", "clone")
@@ -139,6 +139,8 @@ public interface GitTests
                             "    -4, --ipv4            use IPv4 addresses only",
                             "    -6, --ipv6            use IPv6 addresses only",
                             "    --filter <args>       object filtering",
+                            "    --also-filter-submodules",
+                            "                          apply partial clone filters to submodules",
                             "    --remote-submodules   any cloned submodules will use their remote-tracking branch",
                             "    --sparse              initialize sparse-checkout file to include only files at root",
                             ""))
@@ -466,7 +468,7 @@ public interface GitTests
                                 .await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.35.1.windows.2"),
+                                    "git version 2.36.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -579,7 +581,7 @@ public interface GitTests
                             }).await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.35.1.windows.2"),
+                                    "git version 2.36.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -596,9 +598,9 @@ public interface GitTests
                         test.assertEqual(
                             VersionNumber.create()
                                 .setMajor(2)
-                                .setMinor(35)
+                                .setMinor(36)
                                 .setPatch(1)
-                                .setSuffix(".windows.2"),
+                                .setSuffix(".windows.1"),
                             version);
                     });
 
@@ -671,6 +673,8 @@ public interface GitTests
                                     "    -4, --ipv4            use IPv4 addresses only",
                                     "    -6, --ipv6            use IPv6 addresses only",
                                     "    --filter <args>       object filtering",
+                                    "    --also-filter-submodules",
+                                    "                          apply partial clone filters to submodules",
                                     "    --remote-submodules   any cloned submodules will use their remote-tracking branch",
                                     "    --sparse              initialize sparse-checkout file to include only files at root",
                                     ""),
@@ -774,6 +778,8 @@ public interface GitTests
                                     "    -4, --ipv4            use IPv4 addresses only",
                                     "    -6, --ipv6            use IPv6 addresses only",
                                     "    --filter <args>       object filtering",
+                                    "    --also-filter-submodules",
+                                    "                          apply partial clone filters to submodules",
                                     "    --remote-submodules   any cloned submodules will use their remote-tracking branch",
                                     "    --sparse              initialize sparse-checkout file to include only files at root",
                                     ""),

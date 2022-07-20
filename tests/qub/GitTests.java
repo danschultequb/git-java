@@ -85,7 +85,7 @@ public interface GitTests
                 {
                     childProcess.getOutputWriteStream()
                         .writeLines(Iterable.create(
-                            "git version 2.37.0.windows.1"))
+                            "git version 2.37.1.windows.1"))
                         .await();
                 }));
             fakeChildProcessRunner.add(FakeChildProcessRun.create("git", "clone")
@@ -468,7 +468,7 @@ public interface GitTests
                                 .await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.37.0.windows.1"),
+                                    "git version 2.37.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -581,7 +581,7 @@ public interface GitTests
                             }).await();
                             test.assertLinesEqual(
                                 Iterable.create(
-                                    "git version 2.37.0.windows.1"),
+                                    "git version 2.37.1.windows.1"),
                                 output);
                             test.assertLinesEqual(
                                 Iterable.create(),
@@ -599,7 +599,7 @@ public interface GitTests
                             VersionNumber.create()
                                 .setMajor(2)
                                 .setMinor(37)
-                                .setPatch(0)
+                                .setPatch(1)
                                 .setSuffix(".windows.1"),
                             version);
                     });
